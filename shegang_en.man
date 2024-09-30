@@ -1,0 +1,27 @@
+.TH SHEGANG 2024-08-30 SHEGANG\ Shell\ Usage\ Manual
+
+.SH NAME
+shegang - Powerful command interpreter (shell) for linux written in C
+
+.SH SYNOPSIS
+Run `shegang` command without any arguments.
+
+.SH DESCRIPTION
+Blazing fast, super simple and indestructible program interpretator (shell) in C language. `she#gang` is a feature-rich, customizable shell that aims to provide an enhanced user experience for command-line interactions. Inspired by popular shells like bash, zsh and fish, shegang offers a variety of advanced features to streamline your workflow and boost productivity.
+
+.SH COMPILATION
+Run: `make build install clean`. For .so lib for python-ctypes: `make ctypes`
+
+.SH MODES
+The shell can be used in interactive and non-interactive mode.
+
+.SH EXAMPLES
+- Interactive mode:
+.TP
+\r$ shegang
+.TP
+\rshegang $ <command>
+.TP
+
+.SH AUTHOR
+Alexeev Bronislav alxvdev (@alexeev_dev)

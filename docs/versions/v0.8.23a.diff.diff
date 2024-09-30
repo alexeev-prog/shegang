@@ -1,0 +1,268 @@
+tag v0.8.23a.diff
+Tagger: Alexeev Bronislav <bro.alexeev@inbox.ru>
+Date:   Wed Sep 4 23:04:09 2024 +0700
+
+v0.8.23alpha
+
+commit 9dad90e074252fe74bb5f1323db08db8ba21b724
+Author: Alexeev Bronislav <bro.alexeev@inbox.ru>
+Date:   Wed Sep 4 22:51:06 2024 +0700
+
+    feat: create plugin system, basic plugin loader and example plugin
+
+diff --git a/Makefile b/Makefile
+index 06ced8c..91ab5e8 100644
+--- a/Makefile
++++ b/Makefile
+@@ -42,6 +42,9 @@ all: $(BIN_DIR)/$(BINARY_NAME)
+ 
+ build: $(BIN_DIR)/$(BINARY_NAME)
+ 
++example_plugin:
++	$(CC) $(CC_SO_FLAGS) plugins/example_plugin.c -o example_plugin.so
++
+ install: $(BIN_DIR)/$(BINARY_NAME)
+ 	$(SUDO) $(INSTALL_PROGRAM) $(BIN_DIR)/$(BINARY_NAME) /usr/local/bin/
+ 
+diff --git a/example_plugin.so b/example_plugin.so
+new file mode 100755
+index 0000000..bf1614d
+Binary files /dev/null and b/example_plugin.so differ
+diff --git a/include/plugins_manager.h b/include/plugins_manager.h
+new file mode 100644
+index 0000000..035f3dc
+--- /dev/null
++++ b/include/plugins_manager.h
+@@ -0,0 +1,27 @@
++#ifndef PLUGINS_MANAGER_H
++#define PLUGINS_MANAGER_H
++
++typedef struct {
++	char* name;
++	char* description;
++	char* author;
++	char* license;
++} plugin_metadata_t;
++
++typedef struct {
++	int (*init)(void);
++	int (*mainloop)(char* input);
++	int (*deinit)(void);
++} plugin_functions_t;
++
++typedef struct {
++	plugin_metadata_t metadata;
++	plugin_functions_t functions;
++} plugin_t;
++
++int load_plugin(const char* plugin_path, plugin_t* plugin);
++int unload_plugin(plugin_t* plugin);
++int execute_plugin(plugin_t* plugin, char* input);
++int print_plugin_info(plugin_t* plugin);
++
++#endif // PLUGINS_MANAGER_H
+diff --git a/plugins/example_plugin.c b/plugins/example_plugin.c
+new file mode 100644
+index 0000000..e418bbf
+--- /dev/null
++++ b/plugins/example_plugin.c
+@@ -0,0 +1,37 @@
++/**
++ * Example plugin for Shegang shell
++ * by alxvdev
++ */
++#include <stdio.h>
++#include <stdlib.h>
++
++typedef struct {
++	char* name;
++	char* description;
++	char* author;
++	char* license;
++} plugin_metadata_t;
++
++int plugin_init(void) {
++	printf("Example plugin has been initialized\n");
++	return 1;
++}
++
++int plugin_mainloop(char* input) {
++	printf("Example plugin: %s\n", input);
++
++	return 1;
++}
++
++int plugin_deinit(void) {
++	printf("Deinitialize example plugin\n");
++
++	return 1;
++}
++
++void get_plugin_metadata(plugin_metadata_t* metadata) {
++	metadata->name = "Example plugin";
++	metadata->description = "This is example of plugin for shegang";
++	metadata->author = "Alexeev Bronislav";
++	metadata->license = "MIT License";
++}
+diff --git a/src/plugins/plugins_manager.c b/src/plugins/plugins_manager.c
+new file mode 100644
+index 0000000..3cf97bd
+--- /dev/null
++++ b/src/plugins/plugins_manager.c
+@@ -0,0 +1,96 @@
++/**
++ * @title SheGang Linux Shell | Plugins Manager
++ * @filename plugins_manager.c
++ * @brief Module with plugins manager and uploader
++ * @authors Alexeev Bronislav
++ * @license MIT License
++ **/
++#include "dlfcn.h"
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++#include "colors.h"
++#include "plugins_manager.h"
++
++/**
++ * @brief      Loads a plugin.
++ *
++ * @param[in]  plugin_path  The plugin path
++ * @param      plugin       The plugin
++ *
++ * @return     Status code
++ */
++int load_plugin(const char* plugin_path, plugin_t* plugin) {
++	void* handle = dlopen(plugin_path, RTLD_LAZY);
++
++	if (!handle) {
++		fprintf(stderr, "%sError occured when loading plugin: %s%s\n", RED, dlerror(), RESET);
++		return -1;
++	}
++
++	plugin->functions.init = dlsym(handle, "plugin_init");
++	plugin->functions.mainloop = dlsym(handle, "plugin_mainloop");
++	plugin->functions.deinit = dlsym(handle, "plugin_deinit");
++
++	if (!plugin->functions.init ||
++		!plugin->functions.mainloop ||
++		!plugin->functions.deinit) {
++		fprintf(stderr, "%sError occured when get plugin functions:%s%s\n", RED, dlerror(), RESET);
++		dlclose(handle);
++
++		return -1;
++	}
++
++	void (*get_plugin_metadata)(plugin_metadata_t*) = dlsym(handle, "get_plugin_metadata");
++
++	if (!get_plugin_metadata) {
++		fprintf(stderr, "%sError occured when get plugin metadata:%s%s\n", RED, dlerror(), RESET);
++		dlclose(handle);
++
++		return -1;
++	}
++
++	get_plugin_metadata(&plugin->metadata);
++	printf("Plugin %s has been loaded\n", plugin->metadata.name);
++
++	return 1;
++}
++
++/**
++ * @brief      Unload plugin
++ *
++ * @param      plugin  The plugin
++ *
++ * @return     status code
++ */
++int unload_plugin(plugin_t* plugin) {
++	printf("Plugin %s has been unloaded\n", plugin->metadata.name);
++
++	return 1;
++}
++
++/**
++ * @brief      Execute plugin mainloop
++ *
++ * @param      plugin  The plugin
++ * @param      input   The input
++ *
++ * @return     Status code of plugin mainloop
++ */
++int execute_plugin(plugin_t* plugin, char* input) {
++	return plugin->functions.mainloop(input);
++}
++
++/**
++ * @brief      Prints a plugin information.
++ *
++ * @param      plugin  The plugin
++ */
++int print_plugin_info(plugin_t* plugin) {
++	printf("Plugin: %s\n", plugin->metadata.name);
++	printf("\tDescription: %s\n", plugin->metadata.description);
++	printf("\tAuthor: %s\n", plugin->metadata.author);
++	printf("\tLicense: %s\n", plugin->metadata.license);
++
++	return 1;
++}
+diff --git a/src/shegang.c b/src/shegang.c
+index 5ed126a..774baaf 100644
+--- a/src/shegang.c
++++ b/src/shegang.c
+@@ -11,6 +11,7 @@
+ #include "userinput.h"
+ #include "executor.h"
+ #include "tasks_processing.h"
++#include "plugins_manager.h"
+ #include "config.h"
+ 
+ extern tasks tasks_structure;
+@@ -50,6 +51,8 @@ int main(int argc, char** argv) {
+ 	char** args;
+ 	int status;
+ 
++	int have_plugin = 0;
++
+ 	signal(SIGINT, kill_foreground_task);
+ 	signal(SIGCHLD, mark_ended_task);
+ 
+@@ -57,11 +60,29 @@ int main(int argc, char** argv) {
+ 	load_config_aliases();
+ 	setup_isocline();
+ 
++	plugin_t myplugin;
++
++	if (argv[1] != NULL) {
++		have_plugin = 1;
++	}
++
++	if (have_plugin) {
++		if (load_plugin(argv[1], &myplugin) == -1) {
++			fprintf(stderr, "Plugin loading error\n");
++			return -1;
++		}
++
++		myplugin.functions.init();
++	}
++
+ 	do {
+ 		display_ps();
+ 
+ 		line = read_user_input();
+ 
++		if (have_plugin)
++			myplugin.functions.mainloop(line);
++
+ 		if (line == NULL) {
+ 			free(line);
+ 			continue;
+@@ -74,5 +95,8 @@ int main(int argc, char** argv) {
+ 		free(args);
+ 	} while(status);
+ 
++	if (have_plugin)
++		unload_plugin(&myplugin);
++
+ 	return 0;
+ }

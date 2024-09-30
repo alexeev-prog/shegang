@@ -1,0 +1,250 @@
+tag v0.6.22a
+Tagger: Alexeev Bronislav <bro.alexeev@inbox.ru>
+Date:   Sun Sep 1 15:17:13 2024 +0700
+
+version 0.6.22alpha
+
+commit c589858b74ca96ab566a07a40f0a69f0f733d1a4
+Author: Alexeev Bronislav <bro.alexeev@inbox.ru>
+Date:   Sun Sep 1 15:14:42 2024 +0700
+
+    docs/fix: add more command to fzf, autocomplete, highlight and restructure version system
+
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index e4a6f55..6c3dc69 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,3 +1,45 @@
++commit 6f8c060a97570e68b5fae1e6ac5a54900eadc438
++Author: Alexeev Bronislav <bro.alexeev@inbox.ru>
++Date:   Sat Aug 31 23:59:42 2024 +0700
++
++    docs/feat: add more commands for autocompleting and fuzzy finding, improve readme
++
++commit 96c75dcd87be76db280059c1ffdede820a4b1b26
++Author: Alexeev Bronislav <bro.alexeev@inbox.ru>
++Date:   Sat Aug 31 23:33:34 2024 +0700
++
++    fix/feat/docs: improve docs, create aliases system, improve readme
++
++commit 4adb036fadbc63f4aa30776ab34f37979277bf7e
++Author: Alexeev Bronislav <bro.alexeev@inbox.ru>
++Date:   Sat Aug 31 21:48:54 2024 +0700
++
++    fix: fix bug in help function
++
++commit a21b2311219329b51ec2fa3e6aafcfd0bd77b02f
++Author: Alexeev Bronislav <bro.alexeev@inbox.ru>
++Date:   Sat Aug 31 21:38:31 2024 +0700
++
++    feat/fix: big update for read user input (isocline), add fuzzy searching, add syntax highlight and autocomplete
++
++commit 08386024e93077205e6149daf42b9d2e7258edda
++Author: Alexeev Bronislav <bro.alexeev@inbox.ru>
++Date:   Sat Aug 31 19:01:36 2024 +0700
++
++    feat/fix: remove broken autocompletion, add gapf command, some changes
++
++commit 2356d8aef094f5fad4b289ee07a2dd6c6c48fb5b
++Author: Alexeev Bronislav <bro.alexeev@inbox.ru>
++Date:   Sat Aug 31 16:52:05 2024 +0700
++
++    add base autocomplete, improve userinput, man page
++
++commit 80f1b46ff95b2a6eeab0d4c7f8faca23d8177c75
++Author: Alexeev Bronislav <bro.alexeev@inbox.ru>
++Date:   Sat Aug 31 02:21:45 2024 +0700
++
++    docs: translate article to english, improve docs
++
+ commit c0179af21d16c3fbdd4a23863eb92621a3a13e76
+ Author: Alexeev Bronislav <bro.alexeev@inbox.ru>
+ Date:   Sat Aug 31 01:46:09 2024 +0700
+diff --git a/docs/en/changes.md b/docs/en/changes.md
+index fbac65a..693f4c1 100644
+--- a/docs/en/changes.md
++++ b/docs/en/changes.md
+@@ -2,82 +2,42 @@
+ Chanes in shegang with versions.
+ 
+ # Main updates
+-Versions with main updates (small minor updates not included).
+-
+-## 0.10.7
+- > commit 23efcaffeadf3dfd076b2f0bb011ccc7d4682e95
+-
+-Update docs, improve docs, code comments and improve project architecture
+-
+-## 0.10.6
+-
+- > commit 26d228c233f5b255661f9ac50942075bc76caa01
+-
+-Update docs, create build scripts and improve project structure.
+-
+-## 0.9.5
+-
+- > commit 039e295fab939901d2dedf1172ac2af3e9063101
+-
+-Update docs structure and built-in utils:
+-
+- + add `shegang_config` util
+- + update docs/ru/article.md
+-
+-## 0.8.5
+-
+- > commit a58ae5e437c5bec9816edb15b2bc37c5540212b9
+-
+-Update docs structure, update project architecture, fix small bugs and update makefile:
+-
+- + update docs structure
+- + add docs page
+- + update project architecture
+- + update Makefile
+- + fix small bugs
+-
+-## 0.7.4
+-
+- > commit b7e9bf46f121cc89e761b7e976b59bdb7034fe30
+-
+-update docs, fix keyboard interrupt bugs, improve shell prompt, add ctypes library (python), improve configs, update executor and fix small bugs:
+-
+- + update docs
+- + fix shell prompt bug
+- + fix read user input bug
+- + improve shell prompt
+- + add python-module based on ctypes
+- + improve configuration system
+- + update executor module
+- + fix small bugs
+-
+-## 0.2.2
+-
+- > commit e6d064047fcd4e16db89319cf1494579aa006060
+-
+-create configuration read system, improve docs and other small changes:
+-
+- + create config reader
+- + improve colors and formatting
+- + improve docs
+- + improve shell prompt
+-
+-## 0.1.1
+-
+- > commit 91d96b51cc28ab8909386d292c5ac3a46095dbc8
+-
+-Fix readme and minimal docs structure:
+-
+- + create docs structure
+- + update and improve readme
+-
+-## 0.1.0
+- 
+- > commit d7d863eee65b78ac2811d6c6c9ec919dea4deba9
+-
+-Base architecture and minimal functional:
+-
+- + read user input without autocomplete
+- + base command execution
+- + base coloring and formatting
+- + with some bugs
++Versions with main updates.
++
++## Alpha (a)
++
++0.1.0a - base project architecture
++0.2.0a - base functionality
++0.2.1a - improve docs structure
++0.3.1a - create basic configuration system
++0.3.2a - improve docs
++0.3.3a - fix keyboard interrupt bug in shell prompt (improve shell prompt)
++0.3.4a - add ctypes using example
++0.3.5a - impove configuration
++0.3.6a - update executor
++0.3.7a - fix bugs
++0.3.8a - update docs structure, project architecture, update makefile
++0.3.9a - add built-in function `shegang_config` and update docs
++0.3.10a - add man page, update docs, create build scripts
++0.3.11a - update docs and improve project architecture
++0.3.12a - update makefile, docs, scripts
++0.3.13a - refactor comments and docstrings, improve project architecture
++0.4.13a - improve built-in utils, refactor executor module structure, fix bugs
++0.4.14a - add sgls, sglsblk command
++0.4.15a - improve docs
++0.4.16a - improve userinput
++0.4.17a - add gapf command
++0.5.17a - big update for read user input (with isocline): syntax highlight and autocomplete
++0.5.18a - add fuzzy searching
++0.6.18a - create aliases system
++0.6.19a - improve docs
++0.6.20a - add more commands for autocompleting, fzf, syntax highlighting
++0.6.21a - improve docs
++0.6.22a - restructure version system, improve shell experience
++
++## Beta (b)
++No updates.
++
++## Pre-release (pr)
++
++## Release (R)
+diff --git a/src/core/userinput.c b/src/core/userinput.c
+index 30fb798..f7e1649 100644
+--- a/src/core/userinput.c
++++ b/src/core/userinput.c
+@@ -30,6 +30,10 @@ void setup_isocline(void) {
+ 	ic_set_default_highlighter(highlighter, NULL);
+ 
+ 	ic_enable_auto_tab(true);
++	ic_set_hint_delay(100);
++	ic_enable_brace_matching(true);
++	ic_enable_brace_insertion(true);
++	ic_enable_inline_help(true);
+ }
+ 
+ /**
+diff --git a/src/execution/tasks_processing.c b/src/execution/tasks_processing.c
+index cce0664..6acd37c 100644
+--- a/src/execution/tasks_processing.c
++++ b/src/execution/tasks_processing.c
+@@ -38,7 +38,8 @@ const char *apps[] = {
+ 	"sgls", "sglsblk", "help", "exit", 
+ 	"term", "reload", "history", "gapf",
+ 	"neofetch", "firefox", "alacritty", "mate-terminal",
+-	"xfce4-terminal", "thunar", "git", "sudo", "su"
++	"xfce4-terminal", "thunar", "git", "sudo", "su",
++	"shegang_config", "sgls", "sglsblk", "help", "exit", "quit", "bg", "term"
+ };
+ 
+ /**
+diff --git a/src/features/autocomplete.c b/src/features/autocomplete.c
+index d5a5c39..da2d79e 100644
+--- a/src/features/autocomplete.c
++++ b/src/features/autocomplete.c
+@@ -30,7 +30,8 @@ void word_completer(ic_completion_env_t* cenv, const char* word) {
+ 								"pacman", "zypper", "nixpkg", "yum", "man", "touch",
+ 								"wget", "curl", "zip", "unzip", "find", "fzf", "unmount",
+ 								"sgls", "sglsblk", "help", "exit", 
+-								"term", "reload", "history", "gapf", "exec", "sudo", "su", NULL};
++								"term", "reload", "history", "gapf", "exec", "sudo", "su", 
++								"shegang_config", "sgls", "sglsblk", "help", "exit", "quit", "bg", "term", NULL};
+ 	ic_add_completions(cenv, word, completions);
+ 
+ 	if (strcmp(word, "sg") == 0) {
+@@ -91,7 +92,7 @@ void highlighter(ic_highlight_env_t* henv, const char* input, void* arg) {
+ 								"wget", "curl", "zip", "unzip", "find", "fzf", 
+ 								"unmount", "exec", "sudo", "su", NULL};
+ 		const char* builtin_utils[] = {"shegang_config", "sgls", "sglsblk", "help", "exit", 
+-									"term", "reload", "history", "gapf", NULL};
++									"term", "reload", "history", "gapf", "quit", "bg", "term", NULL};
+ 
+ 		long tlen;
+ 
+@@ -107,6 +108,9 @@ void highlighter(ic_highlight_env_t* henv, const char* input, void* arg) {
+ 		} else if ((tlen = ic_is_token(input, i, &ic_char_is_digit)) > 0) {
+ 			ic_highlight(henv, i, tlen, "#e78a4e");
+ 			i += tlen;
++		} else if ((tlen = ic_is_token(input, i, &ic_char_is_filename_letter)) > 0) {
++			ic_highlight(henv, i, tlen, "#e78a4e");
++			i += tlen;
+ 		} else if ((tlen = ic_is_token(input, i, &ic_char_is_separator)) > 0) {
+ 			ic_highlight(henv, i, tlen, "#62605f");
+ 			i += tlen;

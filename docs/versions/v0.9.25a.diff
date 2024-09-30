@@ -1,0 +1,248 @@
+tag v0.9.25a
+Tagger: Alexeev Bronislav <bro.alexeev@inbox.ru>
+Date:   Sun Sep 8 16:00:19 2024 +0700
+
+version 0.9.25alpha
+
+commit 7398a48af75003d2fe36ca9c346613ee1e73e900
+Author: Alexeev Bronislav <bro.alexeev@inbox.ru>
+Date:   Sun Sep 8 15:58:10 2024 +0700
+
+    feat/docs: add environment variables support, improve docs
+
+diff --git a/README.md b/README.md
+index 3656823..7934692 100644
+--- a/README.md
++++ b/README.md
+@@ -42,6 +42,7 @@ shegang comes packed with a wide range of features to enhance your command-line
+  - __Aliases__: shegang have been functionality for create aliases and use it in shell.
+  - __Colorschemes__: shegang have custom color schemes for syntax highlight (you can see in section "usage")
+  - __Plugin system__: shegang have plugin manager, plugin loader and example of plugins for shell. Plugins writen in C and compiled to .so files (and load to shegang)
++ - __Environment variables__: shegang can set or get value of environment variable with `environment` util.
+ 
+ ## Planned Features
+ Me and shegang community is constantly working to improve and expand the shell's capabilities. Some of the planned features include:
+@@ -49,11 +50,10 @@ Me and shegang community is constantly working to improve and expand the shell's
+ 1. *Configuration Management*
+ 2. *Scripting support*
+ 3. *Functions management*
+-4. *Environmant variable handling*
+-5. *Comprehensive customization*
+-6. *Productivity-enhancing tools*
+-7. *Integrated minimalistic text editor like nano or vi*
+-8. *Pipes (>, >>) and delims (&&, ||)*
++4. *Comprehensive customization*
++5. *Productivity-enhancing tools*
++6. *Integrated minimalistic text editor like nano or vi*
++7. *Pipes (>, >>) and delims (&&, ||)*
+ 
+ ### Known uncorrected bugs
+ Unfortunately, shegang has bugs that can interfere with the user experience. Below we have placed a list of known bugs that have not been fixed. You can submit bug solution.
+@@ -251,6 +251,15 @@ Plugin loading: `shegang path/to/plugin.so`.
+ 
+ Compile [example plugin](./plugins/example_plugin.c): `make example_plugin`
+ 
++#### environment
++For get and set value for environment variable use built-in util `environment`:
++
++```bash
++environment set VAR1 TEXT
++environment get VAR1 # TEXT
++environment get USER # <your username>
++```
++
+ ## Functional
+ Here you can see what shegang can already do and what else is planned to be added in the future:
+ 
+@@ -265,11 +274,11 @@ Here you can see what shegang can already do and what else is planned to be adde
+  - [x] Fix bug with grid view in `sgls`
+  - [x] Custom colorschemes for syntax highlight
+  - [x] Plugin System
++ - [x] Environment variables
+  - [ ] Shegang Integrated Minimalistic Editor for Linux (SIMEL)
+  - [ ] Improve configuration
+  - [ ] Improve shell prompt customization
+- - [ ] Plugin system
+- - [ ] Environment variables
++
+ 
+ ## Base Project Structure
+ 
+diff --git a/include/environment.h b/include/environment.h
+new file mode 100644
+index 0000000..7ba6b09
+--- /dev/null
++++ b/include/environment.h
+@@ -0,0 +1,9 @@
++#ifndef ENVIRONMENT_H
++#define ENVIRONMENT_H
++
++int setenv(const char* envname, const char*envval, int overwrite);
++
++char *get_environment_variable(const char* variable_name);
++char *set_environment_variable(const char* variable_name, const char* variable_value);
++
++#endif // ENVIRONMENT_H
+\ No newline at end of file
+diff --git a/src/execution/executor.c b/src/execution/executor.c
+index aac236b..9d4d784 100644
+--- a/src/execution/executor.c
++++ b/src/execution/executor.c
+@@ -15,10 +15,7 @@
+ #include "config.h"
+ #include "builtin.h"
+ #include "executor.h"
+-#include <stdlib.h>
+-#include <ctype.h>
+- 
+-#define INITIAL_RESULT_SIZE 10
++#include "environment.h"
+ 
+ extern tasks tasks_structure;
+ extern char* username_color;
+@@ -52,6 +49,7 @@ int help(char** args) {
+ 			" history                 - Print the shell commands history\n"
+ 			" sgls                    - `ls` command analogue, with colors and nerd icons (help exists)\n"
+ 			" sglsblk                 - `lsblk` command analogue\n"
++			" environment             - Set and get env vars\n"
+ 			" gapf                    - `cat` command simple analogue\n\n"
+ 
+ 			" Additional arguments: shegang_config, sgls\n"
+@@ -72,6 +70,12 @@ int help(char** args) {
+ 				"-l				Show as list\n"
+ 				"-p				Show permissions\n"
+ 		);
++	} else if (strcmp(args[1], "environment") == 0) {
++		println("Built-in function `sgls`\n");
++		printf(
++			"get <VAR>                   - get value of var (ex. get USER)\n"
++			"set <VAR> <VALUE>           - set value for var (ex. set GANG SHELL)\n"
++		);
+ 	}
+ 
+ 	return 1;
+@@ -184,6 +188,24 @@ int execute(char** args) {
+ 		println("Aliases are read from the config file ~/.sgaliases. Alias template: `NAME=COMMAND`");
+ 		global_exit_code = -1;
+ 		return 1;
++	} else if (strcmp(args[0], "environment") == 0) {
++		if (args[1] == NULL || args[2] == NULL) {
++			global_exit_code = -1;
++			println("Usage: environment <get> <var> OR environment <set> <var> <value>");
++			return 1;
++		}
++
++		if (strcmp(args[1], "get") == 0) {
++			printf("%s\n", get_environment_variable(args[2]));
++			return 1;
++		} else if (strcmp(args[1], "set") == 0 && args[2] != NULL && args[3] != NULL) {
++			char* result = set_environment_variable(args[2], args[3]);
++			printf("ENV: %s\n", result);
++			return 1;
++		}
++
++		println("Usage: environment <get> <var> OR environment <set> <var> <value>");
++		return 1;
+ 	} else {
+ 		if (execute_alias(args) == 0)
+ 			return launch_task(args);
+diff --git a/src/execution/tasks_processing.c b/src/execution/tasks_processing.c
+index 353e92c..d6985fb 100644
+--- a/src/execution/tasks_processing.c
++++ b/src/execution/tasks_processing.c
+@@ -40,7 +40,7 @@ const char *apps[] = {
+ 	"neofetch", "firefox", "alacritty", "mate-terminal",
+ 	"xfce4-terminal", "thunar", "git", "sudo", "su",
+ 	"shegang_config", "sgls", "sglsblk", "help", "exit", "quit", "bg", "term",
+-	"nautilus", "gcc", "g++", "clang", NULL
++	"nautilus", "gcc", "g++", "clang", "environment", NULL
+ };
+ 
+ extern int global_exit_code;
+diff --git a/src/features/autocomplete.c b/src/features/autocomplete.c
+index 713d384..02d09b1 100644
+--- a/src/features/autocomplete.c
++++ b/src/features/autocomplete.c
+@@ -42,6 +42,8 @@ void word_completer(ic_completion_env_t* cenv, const char* word) {
+ 		ic_add_completion(cenv, "touch");
+ 		ic_add_completion(cenv, "tail");
+ 		ic_add_completion(cenv, "term");
++	} else if (strcmp(word, "e") == 0) {
++		ic_add_completion(cenv, "environment");
+ 	}
+ }
+ 
+@@ -87,7 +89,7 @@ void highlighter(ic_highlight_env_t* henv, const char* input, void* arg) {
+ 								"md5sum", "sha256sum", "mesg", "systemd-analyze",
+ 								"epm", "portage", NULL};
+ 		const char* builtin_utils[] = {"shegang_config", "sgls", "sglsblk", "help", "exit", 
+-									"term", "reload", "history", "gapf", "quit", "bg", "term", NULL};
++									"term", "reload", "history", "gapf", "quit", "bg", "term", "environment", NULL};
+ 		const char* operators[] = {"==", ">=", "<=", "!=", ">", "<", "+", "-", "*", "/", "&&", "||", NULL};
+ 
+ 		long tlen;
+diff --git a/src/features/colors.c b/src/features/colors.c
+index 7d7b979..ac908c9 100644
+--- a/src/features/colors.c
++++ b/src/features/colors.c
+@@ -192,7 +192,7 @@ void display_ps(void) {
+ 
+ 	printf("%s─%s", DIM, RESET);
+ 
+-	printf("%s[%s%s%d:%d:%d%s%s]%s", GRAY, RESET, curr_time_color, timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec, RESET, GRAY, RESET);
++	printf("%s[%s%s%d:%d:%d%s%s] %s", GRAY, RESET, curr_time_color, timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec, RESET, GRAY, RESET);
+ 
+ 	if (global_exit_code != 0)
+ 		printf("%s%d ✘%s", RED, global_exit_code, RESET);
+diff --git a/src/features/environment.c b/src/features/environment.c
+new file mode 100644
+index 0000000..0617090
+--- /dev/null
++++ b/src/features/environment.c
+@@ -0,0 +1,46 @@
++/**
++ * @title SheGang Linux Shell | Environment
++ * @filename environment.c
++ * @brief Module with setenv and getenv POSIX APIs to set and get environment variables
++ * @authors Alexeev Bronislav
++ * @license MIT License
++ **/
++#include <stdio.h>
++#include <string.h>
++#include <stdlib.h>
++
++int setenv(const char* envname, const char*envval, int overwrite);
++
++/**
++ * @brief      Gets the environment variable.
++ *
++ * @param[in]  variable_name  The variable name
++ *
++ * @return     The environment variable.
++ */
++char *get_environment_variable(const char* variable_name) {
++	char* variable_value = getenv(variable_name);
++
++	if (variable_value == NULL)
++		return "N/A";
++
++	return variable_value;
++}
++
++/**
++ * @brief      Sets the environment variable.
++ *
++ * @param[in]  variable_name   The variable name
++ * @param[in]  variable_value  The variable value
++ *
++ * @return     string stauts
++ */
++char* set_environment_variable(const char* variable_name, const char* variable_value) {
++	int status = setenv(variable_name, variable_value, 1);
++
++	if (status == 1) {
++		return "ERROR";
++	} else {
++		return "SUCCESS";
++	}
++}
